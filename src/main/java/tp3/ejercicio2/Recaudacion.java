@@ -1,8 +1,5 @@
 package tp3.ejercicio2;
 
-import com.opencsv.CSVReader;
-
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,79 +7,93 @@ import java.util.List;
 import java.util.Map;
 
 public class Recaudacion {
-    public static List<Map<String, String>> where(Map<String, String> options)
-            throws IOException {
-        List<String[]> csvData = new ArrayList<String[]>();
-        CSVReader reader = new CSVReader(new FileReader("src/main/resources/data.csv"));
-        String[] row = null;
+    private static final String COMPANY_NAME = "company_name";
+    private static final String CITY = "city";
+    private static final String STATE = "state";
+    private static final String ROUND = "round";
+    private static final String PERMALINK = "permalink";
+    private static final String NUMBER_EMPLOYEES = "number_employees";
+    private static final String CATEGORY = "category";
+    private static final String FUNDED_DATE = "funded_date";
+    private static final String RAISED_AMOUNT = "raised_amount";
+    private static final String RAISED_CURRENCY = "raised_currency";
 
-        while ((row = reader.readNext()) != null) {
-            csvData.add(row);
-        }
+    private static final int PERMALINK_INDEX = 0;
+    private static final int COMPANY_NAME_INDEX = 1;
+    private static final int NUMBER_EMPLOYEES_INDEX = 2;
+    private static final int CATEGORY_INDEX = 3;
+    private static final int CITY_INDEX = 4;
+    private static final int STATE_INDEX = 5;
+    private static final int FUNDED_DATE_INDEX = 6;
+    private static final int RAISED_AMOUNT_INDEX = 7;
+    private static final int RAISED_CURRENCY_INDEX = 8;
+    private static final int ROUND_INDEX = 9;
 
-        reader.close();
-        csvData.remove(0);
+    private List<String[]> csvData;
+    private LectorCsv dataLoader;
 
-        if (options.containsKey("company_name")) {
-            List<String[]> results = new ArrayList<String[]>();
+    public Recaudacion(String rutaArchivo) throws IOException {
+        this.dataLoader = new LectorCsv(rutaArchivo);
+        this.csvData = dataLoader.loadData();
+    }
 
-            for (int i = 0; i < csvData.size(); i++) {
-                if (csvData.get(i)[1].equals(options.get("company_name"))) {
-                    results.add(csvData.get(i));
-                }
+    public List<Map<String, String>> where(Map<String, String> options) {
+        List<String[]> filteredData = new ArrayList<>(csvData);
+
+        Map<String, Integer> fieldIndexMap = Map.of(
+                COMPANY_NAME, COMPANY_NAME_INDEX,
+                CITY, CITY_INDEX,
+                STATE, STATE_INDEX,
+                ROUND, ROUND_INDEX
+        );
+
+        for (Map.Entry<String, String> entry : options.entrySet()) {
+            String field = entry.getKey();
+            String value = entry.getValue();
+
+            if (fieldIndexMap.containsKey(field)) {
+                int index = fieldIndexMap.get(field);
+                filteredData = filterByColumn(filteredData, index, value);
             }
-            csvData = results;
         }
 
-        if (options.containsKey("city")) {
-            List<String[]> results = new ArrayList<String[]>();
+        return convertToMapList(filteredData);
+    }
 
-            for (int i = 0; i < csvData.size(); i++) {
-                if (csvData.get(i)[4].equals(options.get("city"))) {
-                    results.add(csvData.get(i));
-                }
+    private List<String[]> filterByColumn(List<String[]> data, int columnIndex, String value) {
+        List<String[]> results = new ArrayList<>();
+
+        for (String[] row : data) {
+            if (row[columnIndex].equals(value)) {
+                results.add(row);
             }
-            csvData = results;
         }
+        return results;
+    }
 
-        if (options.containsKey("state")) {
-            List<String[]> results = new ArrayList<String[]>();
+    private List<Map<String, String>> convertToMapList(List<String[]> data) {
+        List<Map<String, String>> output = new ArrayList<>();
 
-            for (int i = 0; i < csvData.size(); i++) {
-                if (csvData.get(i)[5].equals(options.get("state"))) {
-                    results.add(csvData.get(i));
-                }
-            }
-            csvData = results;
-        }
-
-        if (options.containsKey("round")) {
-            List<String[]> results = new ArrayList<String[]>();
-
-            for (int i = 0; i < csvData.size(); i++) {
-                if (csvData.get(i)[9].equals(options.get("round"))) {
-                    results.add(csvData.get(i));
-                }
-            }
-            csvData = results;
-        }
-
-        List<Map<String, String>> output = new ArrayList<Map<String, String>>();
-
-        for (int i = 0; i < csvData.size(); i++) {
-            Map<String, String> mapped = new HashMap<String, String>();
-            mapped.put("permalink", csvData.get(i)[0]);
-            mapped.put("company_name", csvData.get(i)[1]);
-            mapped.put("number_employees", csvData.get(i)[2]);
-            mapped.put("category", csvData.get(i)[3]);
-            mapped.put("city", csvData.get(i)[4]);
-            mapped.put("state", csvData.get(i)[5]);
-            mapped.put("funded_date", csvData.get(i)[6]);
-            mapped.put("raised_amount", csvData.get(i)[7]);
-            mapped.put("raised_currency", csvData.get(i)[8]);
-            mapped.put("round", csvData.get(i)[9]);
+        for (String[] row : data) {
+            Map<String, String> mapped = createRowMap(row);
             output.add(mapped);
         }
         return output;
     }
+
+    private Map<String, String> createRowMap(String[] row) {
+        Map<String, String> mapped = new HashMap<>();
+        mapped.put(PERMALINK, row[PERMALINK_INDEX]);
+        mapped.put(COMPANY_NAME, row[COMPANY_NAME_INDEX]);
+        mapped.put(NUMBER_EMPLOYEES, row[NUMBER_EMPLOYEES_INDEX]);
+        mapped.put(CATEGORY, row[CATEGORY_INDEX]);
+        mapped.put(CITY, row[CITY_INDEX]);
+        mapped.put(STATE, row[STATE_INDEX]);
+        mapped.put(FUNDED_DATE, row[FUNDED_DATE_INDEX]);
+        mapped.put(RAISED_AMOUNT, row[RAISED_AMOUNT_INDEX]);
+        mapped.put(RAISED_CURRENCY, row[RAISED_CURRENCY_INDEX]);
+        mapped.put(ROUND, row[ROUND_INDEX]);
+        return mapped;
+    }
 }
+
