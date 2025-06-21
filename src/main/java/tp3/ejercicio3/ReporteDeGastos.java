@@ -3,49 +3,39 @@ package tp3.ejercicio3;
 import java.time.LocalDate;
 import java.util.List;
 
-enum TipoDeGasto {
-    CENA, DESAYUNO, ALQUILER_AUTO
-}
-
-class Gasto {
-    TipoDeGasto tipoGasto;
-    int monto;
-}
-
 public class ReporteDeGastos {
-    public void imprimir(List<Gasto> gastos) {
+    private LocalDate fecha;
+
+    public ReporteDeGastos(LocalDate fecha) {
+        this.fecha = fecha;
+    }
+
+    public ReporteDeGastos() {
+        this.fecha = LocalDate.now();
+    }
+
+    public String generar(List<Gasto> gastos) {
+        StringBuilder reporte = new StringBuilder();
         int total = 0;
         int gastosDeComida = 0;
 
-        System.out.println("Expenses " + LocalDate.now());
+        reporte.append("Expenses ").append(fecha).append("\n");
 
         for (Gasto gasto : gastos) {
-            if (gasto.tipoGasto == TipoDeGasto.CENA || gasto.tipoGasto == TipoDeGasto.DESAYUNO) {
-                gastosDeComida += gasto.monto;
+            if (gasto.esComida()) {
+                gastosDeComida += gasto.obtenerMonto();
             }
-
-            String nombreGasto = "";
-            switch (gasto.tipoGasto) {
-                case CENA:
-                    nombreGasto = "Cena";
-                    break;
-                case DESAYUNO:
-                    nombreGasto = "Desayuno";
-                    break;
-                case ALQUILER_AUTO:
-                    nombreGasto = "Alquiler de Autos";
-                    break;
-            }
-
-            String marcaExcesoComidas = gasto.tipoGasto == TipoDeGasto.CENA && gasto.monto > 5000
-                    || gasto.tipoGasto == TipoDeGasto.DESAYUNO && gasto.monto > 1000 ? "X" : " ";
-
-            System.out.println(nombreGasto + "\t" + gasto.monto + "\t" + marcaExcesoComidas);
-
-            total += gasto.monto;
+            reporte.append(gasto.generarLineaReporte()).append("\n");
+            total += gasto.obtenerMonto();
         }
 
-        System.out.println("Gastos de comida: " + gastosDeComida);
-        System.out.println("Total de gastos: " + total);
+        reporte.append("Gastos de comida: ").append(gastosDeComida).append("\n");
+        reporte.append("Total de gastos: ").append(total).append("\n");
+
+        return reporte.toString();
+    }
+
+    public void imprimir(List<Gasto> gastos) {
+        System.out.print(generar(gastos));
     }
 }
